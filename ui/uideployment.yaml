@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiops-ui
+  namespace: ai-ops-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aiops-ui
+  template:
+    metadata:
+      labels:
+        app: aiops-ui
+    spec:
+      serviceAccountName: aiops-agent
+      containers:
+      - name: ui
+        image: gullumama/rajesh:ui-v3     #gullumama/rajesh:ui-v2. this image was used in minikube that was working fine 
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aiops-ui
+  namespace: ai-ops-agent
+spec:
+  type: LoadBalancer
+  selector:
+    app: aiops-ui
+  ports:
+  - port: 80
+    targetPort: 8501
+    # nodePort: 30020

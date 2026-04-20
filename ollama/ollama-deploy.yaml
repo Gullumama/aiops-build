@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: ai-ops-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+      - name: ollama
+        image: 139822119789.dkr.ecr.us-east-2.amazonaws.com/ollama-qwen:v5.0 #gullumama/ollama-qwen:v4.0 was working with minikube
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 11434
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: ai-ops-agent
+spec:
+  selector:
+    app: ollama
+  ports:
+  - port: 11434
+    targetPort: 11434

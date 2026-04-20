@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiops-agent
+  namespace: ai-ops-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aiops-agent
+  template:
+    metadata:
+      labels:
+        app: aiops-agent
+    spec:
+      serviceAccountName: aiops-agent
+      containers:
+      - name: aiops-agent
+        image: 139822119789.dkr.ecr.us-east-2.amazonaws.com/ollama-qwen:v45.0        #gullumama/aiops-agent:v44.0 This was working fine on minikube 
+
+        # ✅ IMPORTANT for local image
+        #imagePullPolicy: Never
+
+        ports:
+        - containerPort: 8080
+
+        env:
+        # Qwen (Ollama inside cluster)
+        - name: OLLAMA_URL
+          value: "http://ollama:11434"   #"http://ollama.ai-ops-agent.svc.cluster.local:11434/api/generate"
+        - name: K8SGPT_URL
+          value: "http://k8sgpt-svc:5050"     #"http://k8sgpt-svc.ai-ops-agent.svc.cluster.local:5050"
+
+        # Teams Webhook (optional for now)
+        - name: WEBHOOK_URL
+          valueFrom:  
+            secretKeyRef:
+              name: teams-secret
+              key: WEBHOOK_URL
+              optional: true
+
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aiops-agent
+  namespace: ai-ops-agent
+spec:
+  selector:
+    app: aiops-agent
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP

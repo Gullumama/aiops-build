@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8sgpt
+  namespace: ai-ops-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sgpt
+  template:
+    metadata:
+      labels:
+        app: k8sgpt
+    spec:
+      serviceAccountName: k8sgpt-sa
+      containers:
+        - name: k8sgpt
+          image: 139822119789.dkr.ecr.us-east-2.amazonaws.com/ollama-qwen:v1.0     #gullumama/k8sgpt-ollama:latest #this image was using in the minikube 
+
+          command:
+            - /bin/sh
+            - -c
+
+          args:
+            - |
+              echo "Creating K8sGPT config..."
+              mkdir -p /root/.config/k8sgpt
+
+              cat <<EOF > /root/.config/k8sgpt/k8sgpt.yaml
+              ai:
+                providers:
+                  - name: ollama
+                    model: qwen:1.8b
+                    baseurl: http://ollama.ai-ops-agent.svc.cluster.local:11434
+                defaultprovider: ollama
+              EOF
+
+              echo "Setting environment..."
+              export K8SGPT_PROVIDER=ollama
+
+              echo "Starting K8sGPT..."
+              /root/k8sgpt serve --backend ollama
+
+          ports:
+            - containerPort: 8080
+            - containerPort: 8081
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8sgpt-svc
+  namespace: ai-ops-agent
+spec:
+  selector:
+    app: k8sgpt
+  ports:
+    - name: api
+      port: 5050
+      targetPort: 8080
+    - name: metrics
+      port: 5051
+      targetPort: 8081
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8sgpt-sa
+  namespace: ai-ops-agent

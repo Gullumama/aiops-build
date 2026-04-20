@@ -1,0 +1,16 @@
+# Ignore Terraform folder
+learn-terraform-provision-eks-cluster/
+
+# Ignore Terraform state
+*.tfstate
+*.tfstate.*
+
+# Mac files
+.DS_Store
+
+# Python cache (if any)
+__pycache__/
+*.pyc
+
+# Env files
+.env
